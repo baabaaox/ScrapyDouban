@@ -6,7 +6,7 @@ import arrow
 
 
 def match_year(s):
-    matches = re.findall(ur"[\d]{4}", s)
+    matches = re.findall('[\d]{4}', s)
     if matches:
         return matches[0]
     else:
@@ -14,7 +14,7 @@ def match_year(s):
 
 
 def match_date(s):
-    matches = re.findall(ur"[\d-]{8,10}", s)
+    matches = re.findall('[\d-]{8,10}', s)
     if matches:
         return matches[0]
     else:
@@ -29,7 +29,7 @@ def str_to_date(s):
 
 
 def is_match_chinese(s):
-    matches = re.findall(ur'[\u4e00-\u9fa5]+', s)
+    matches = re.findall('[\u4e00-\u9fa5]+', s)
     if matches:
         return True
     else:

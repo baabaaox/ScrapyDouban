@@ -1,0 +1,20 @@
+mysql:
+  image: mysql:5.7
+  ports:
+    - "3306:3306"
+  volumes:
+    - data:/var/lib/mysql
+  environment:
+    - MYSQL_ROOT_PASSWORD=HardM0de
+
+scrapy:
+  build: ./scrapy
+  ports:
+    - "8899:8899"
+  links:
+    - "mysql"
+  volumes:
+    - /srv:/srv
+  environment:
+    - LANG=C.UTF-8
+  # tty: true

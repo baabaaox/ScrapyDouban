@@ -2,32 +2,40 @@
 # -*- coding: utf-8 -*-
 
 
-import string
 import random
-import book.util as util
-import book.database as db
+import string
 
-from scrapy import Spider
-from book.items import Meta
+import douban.database as db
+from douban.items import BookMeta
+import douban.util as util
+
+from scrapy import Request, Spider
+
+cursor = db.connection.cursor()
 
 
-class MetaSpider(Spider):
-    name = 'meta'
+class BookMetaSpider(Spider):
+    name = 'book_meta'
+    user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 \
+                  (KHTML, like Gecko) Chrome/67.0.3396.62 Safari/537.36'
     allowed_domains = ["book.douban.com"]
-    books = db.conn.query('SELECT * FROM subjects WHERE type="book" AND \
-douban_id NOT IN (SELECT douban_id FROM books) ORDER BY douban_id DESC')
+    sql = 'SELECT * FROM subjects WHERE type="book" AND douban_id NOT IN \
+           (SELECT douban_id FROM books) ORDER BY douban_id'
+    cursor.execute(sql)
+    books = cursor.fetchall()
     start_urls = (
         'https://book.douban.com/subject/%s/' % i['douban_id'] for i in books
     )
 
-    def make_requests_from_url(self, url):
-        request = super(MetaSpider, self).make_requests_from_url(url)
-        bid = ''.join(random.choice(string.ascii_letters + string.digits) for
-                      x in range(11))
-        request.cookies['bid'] = bid
-        request.meta['dont_redirect'] = True
-        request.meta['handle_httpstatus_list'] = [302]
-        return request
+    def start_requests(self):
+        for url in self.start_urls:
+            bid = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(11))
+            cookies = {
+                'bid': bid,
+                'dont_redirect': True,
+                'handle_httpstatus_list': [302],
+            }
+            yield Request(url, cookies=cookies)
 
     def get_douban_id(self, meta, response):
         meta['douban_id'] = response.url[32:-1]
@@ -38,8 +46,7 @@ douban_id NOT IN (SELECT douban_id FROM books) ORDER BY douban_id DESC')
         data = response.xpath(regx).extract()
         if data:
             if (data[0].find('default') == -1):
-                meta['cover'] = data[0].replace('spst', '\
-lpst').replace('mpic', 'lpic')
+                meta['cover'] = data[0].replace('spst', 'lpst').replace('mpic', 'lpic')
             else:
                 meta['cover'] = ''
         return meta
@@ -56,7 +63,7 @@ lpst').replace('mpic', 'lpic')
         return meta
 
     def get_alt_name(self, meta, response):
-        regx = u'//text()[preceding-sibling::span[text()="原作名:"]][following\
+        regx = '//text()[preceding-sibling::span[text()="原作名:"]][following\
 -sibling::br]'
         data = response.xpath(regx).extract()
         if data:
@@ -64,7 +71,7 @@ lpst').replace('mpic', 'lpic')
         return meta
 
     def get_sub_name(self, meta, response):
-        regx = u'//text()[preceding-sibling::span[text()="副标题:"]][following\
+        regx = '//text()[preceding-sibling::span[text()="副标题:"]][following\
 -sibling::br]'
         data = response.xpath(regx).extract()
         if data:
@@ -72,7 +79,7 @@ lpst').replace('mpic', 'lpic')
         return meta
 
     def get_author(self, meta, response):
-        regx = u'//a[parent::span[child::span[text()=" 作者"]]]/text()'
+        regx = '//a[parent::span[child::span[text()=" 作者"]]]/text()'
         authors = response.xpath(regx).extract()
         if authors:
             meta['authors'] = '/'.join((i.strip() for i in authors))
@@ -82,7 +89,7 @@ lpst').replace('mpic', 'lpic')
         regx = '//div[@id="link-report"]//div[@class="intro"]'
         matches = response.xpath(regx)
         if matches:
-            items = matches[-1].xpath(u'p/text()').extract()
+            items = matches[-1].xpath('p/text()').extract()
             meta['summary'] = ''.join(('<p>%s</p>' % i for i in items))
 
         return meta
@@ -97,14 +104,14 @@ lpst').replace('mpic', 'lpic')
         return meta
 
     def get_translator(self, meta, response):
-        regx = u'//a[parent::span[child::span[text()=" 译者"]]]/text()'
+        regx = '//a[parent::span[child::span[text()=" 译者"]]]/text()'
         translators = response.xpath(regx).extract()
         if translators:
             meta['translators'] = '/'.join((i.strip() for i in translators))
         return meta
 
     def get_series(self, meta, response):
-        regx = u'//a[preceding-sibling::span[text()="丛书:"]][following\
+        regx = '//a[preceding-sibling::span[text()="丛书:"]][following\
 -sibling::br]/text()'
         series = response.xpath(regx).extract()
         if series:
@@ -112,7 +119,7 @@ lpst').replace('mpic', 'lpic')
         return meta
 
     def get_publisher(self, meta, response):
-        regx = u'//text()[preceding-sibling::span[text()="出版社:"]][following\
+        regx = '//text()[preceding-sibling::span[text()="出版社:"]][following\
 -sibling::br]'
         data = response.xpath(regx).extract()
         if data:
@@ -120,7 +127,7 @@ lpst').replace('mpic', 'lpic')
         return meta
 
     def get_publish_date(self, meta, response):
-        regx = u'//text()[preceding-sibling::span[text()="出版年:"]][following\
+        regx = '//text()[preceding-sibling::span[text()="出版年:"]][following\
 -sibling::br]'
         data = response.xpath(regx).extract()
         if data:
@@ -128,7 +135,7 @@ lpst').replace('mpic', 'lpic')
         return meta
 
     def get_pages(self, meta, response):
-        regx = u'//text()[preceding-sibling::span[text()="页数:"]][following\
+        regx = '//text()[preceding-sibling::span[text()="页数:"]][following\
 -sibling::br]'
         data = response.xpath(regx).extract()
         if data:
@@ -136,7 +143,7 @@ lpst').replace('mpic', 'lpic')
         return meta
 
     def get_price(self, meta, response):
-        regx = u'//text()[preceding-sibling::span[text()="定价:"]][following\
+        regx = '//text()[preceding-sibling::span[text()="定价:"]][following\
 -sibling::br]'
         data = response.xpath(regx).extract()
         if data:
@@ -144,7 +151,7 @@ lpst').replace('mpic', 'lpic')
         return meta
 
     def get_binding(self, meta, response):
-        regx = u'//text()[preceding-sibling::span[text()="装帧:"]][following\
+        regx = '//text()[preceding-sibling::span[text()="装帧:"]][following\
 -sibling::br]'
         data = response.xpath(regx).extract()
         if data:
@@ -186,12 +193,12 @@ lpst').replace('mpic', 'lpic')
 
     def parse(self, response):
         if 35000 > len(response.body):
-            print response.body
-            print response.url
+            print(response.body)
+            print(response.url)
         elif 404 == response.status:
-            print response.url
+            print(response.url)
         else:
-            meta = Meta()
+            meta = BookMeta()
             self.get_douban_id(meta, response)
             self.get_cover(meta, response)
             self.get_name(meta, response)

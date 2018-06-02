@@ -4,38 +4,46 @@
 
 import string
 import random
-import movie.util as util
-import movie.database as db
-import movie.validator as validator
+import douban.util as util
+import douban.database as db
+import douban.validator as validator
 
-from scrapy import Spider
-from movie.items import Meta
+from scrapy import Request, Spider
+from douban.items import MovieMeta
 
 
-class MetaSpider(Spider):
-    name = 'meta'
+cursor = db.connection.cursor()
+
+
+class MovieMetaSpider(Spider):
+    name = 'movie_meta'
+    user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 \
+                  (KHTML, like Gecko) Chrome/67.0.3396.62 Safari/537.36'
     allowed_domains = ["movie.douban.com"]
-    movies = db.conn.query('SELECT * FROM subjects WHERE type="movie" AND \
-douban_id NOT IN (SELECT douban_id FROM movies) ORDER BY douban_id DESC')
+    sql = 'SELECT * FROM subjects WHERE type="movie" AND douban_id NOT IN \
+(SELECT douban_id FROM movies) ORDER BY douban_id DESC'
+    cursor.execute(sql)
+    movies = cursor.fetchall()
     start_urls = (
         'https://movie.douban.com/subject/%s/' % i['douban_id'] for i in movies
     )
 
-    def make_requests_from_url(self, url):
-        request = super(MetaSpider, self).make_requests_from_url(url)
-        bid = ''.join(random.choice(string.ascii_letters + string.digits) for
-                      x in range(11))
-        request.cookies['bid'] = bid
-        request.meta['dont_redirect'] = True
-        request.meta['handle_httpstatus_list'] = [302]
-        return request
+    def start_requests(self):
+        for url in self.start_urls:
+            bid = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(11))
+            cookies = {
+                'bid': bid,
+                'dont_redirect': True,
+                'handle_httpstatus_list': [302],
+            }
+            yield Request(url, cookies=cookies)
 
     def get_douban_id(self, meta, response):
         meta['douban_id'] = response.url[33:-1]
         return meta
 
     def get_type(self, meta, response):
-        regx = u'//text()[preceding-sibling::span[text()="集数:"]][fo\
+        regx = '//text()[preceding-sibling::span[text()="集数:"]][fo\
 llowing-sibling::br]'
         data = response.xpath(regx).extract()
         if data:
@@ -92,7 +100,7 @@ lpst').replace('mpic', 'lpic')
         return meta
 
     def get_official_site(self, meta, response):
-        regx = u'//a[preceding-sibling::span[text()="官方网站:"]][following-si\
+        regx = '//a[preceding-sibling::span[text()="官方网站:"]][following-si\
 bling::br]/@href'
         data = response.xpath(regx).extract()
         if data:
@@ -100,7 +108,7 @@ bling::br]/@href'
         return meta
 
     def get_regions(self, meta, response):
-        regx = u'//text()[preceding-sibling::span[text()="制片国家/地区:"]][fo\
+        regx = '//text()[preceding-sibling::span[text()="制片国家/地区:"]][fo\
 llowing-sibling::br]'
         data = response.xpath(regx).extract()
         if data:
@@ -108,7 +116,7 @@ llowing-sibling::br]'
         return meta
 
     def get_languages(self, meta, response):
-        regx = u'//text()[preceding-sibling::span[text()="语言:"]][following-s\
+        regx = '//text()[preceding-sibling::span[text()="语言:"]][following-s\
 ibling::br]'
         data = response.xpath(regx).extract()
         if data:
@@ -132,7 +140,7 @@ ibling::br]'
         return meta
 
     def get_alias(self, meta, response):
-        regx = u'//text()[preceding-sibling::span[text()="又名:"]][following-s\
+        regx = '//text()[preceding-sibling::span[text()="又名:"]][following-s\
 ibling::br]'
         data = response.xpath(regx).extract()
         if data:
@@ -140,7 +148,7 @@ ibling::br]'
         return meta
 
     def get_imdb_id(self, meta, response):
-        regx = u'//a[preceding-sibling::span[text()="IMDb链接:"]][following-si\
+        regx = '//a[preceding-sibling::span[text()="IMDb链接:"]][following-si\
 bling::br]/@href'
         data = response.xpath(regx).extract()
         if data:
@@ -187,12 +195,12 @@ bling::br]/@href'
 
     def parse(self, response):
         if 35000 > len(response.body):
-            print response.body
-            print response.url
+            print(response.body)
+            print(response.url)
         elif 404 == response.status:
-            print response.url
+            print(response.url)
         else:
-            meta = Meta()
+            meta = MovieMeta()
             self.get_douban_id(meta, response)
             self.get_type(meta, response)
             self.get_cover(meta, response)

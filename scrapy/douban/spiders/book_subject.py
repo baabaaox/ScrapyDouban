@@ -1,18 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import string
 import random
+import string
 
-from book.items import Subject
-from scrapy.spiders import CrawlSpider, Rule
+from douban.items import Subject
+
 from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import CrawlSpider, Request, Rule
 
 
-class SubjectSpider(CrawlSpider):
-    name = 'subject'
+class BookSubjectSpider(CrawlSpider):
+    name = 'book_subject'
     allowed_domains = ['m.douban.com']
-    start_urls = ['https://m.douban.com/book/subject/26856953/?refer=home']
+    start_urls = ['https://m.douban.com/book/subject/26628811/']
     rules = (
         Rule(LinkExtractor(allow=('book/subject/(\d).*rec$')),
              callback='parse_item', follow=True, process_request='cookie'),
@@ -24,12 +25,10 @@ class SubjectSpider(CrawlSpider):
         request.cookies['bid'] = bid
         return request
 
-    def make_requests_from_url(self, url):
-        request = super(SubjectSpider, self).make_requests_from_url(url)
-        bid = ''.join(random.choice(string.ascii_letters + string.digits) for
-                      x in range(11))
-        request.cookies['bid'] = bid
-        return request
+    def start_requests(self):
+        for url in self.start_urls:
+            bid = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(11))
+            yield Request(url, cookies={'bid': bid})
 
     def get_douban_id(self, subject, response):
         subject['douban_id'] = response.url[34:-10]
