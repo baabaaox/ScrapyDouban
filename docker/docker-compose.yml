@@ -1,0 +1,26 @@
+scrapy:
+  build: ./scrapy
+  container_name: douban_scrapy
+  ports:
+    - "8899:8899"
+  links:
+    - "db"
+  # tty: true
+
+db:
+  build: ./mysql
+  container_name: douban_db
+  # volumes:
+    # - douban:/var/lib/mysql
+  environment:
+    - MYSQL_ROOT_PASSWORD=HardM0de
+    - MYSQL_DATABASE=douban
+  command: mysqld --default-authentication-plugin=mysql_native_password
+
+adminer:
+  image: adminer:4
+  container_name: douban_adminer
+  ports:
+    - 8080:8080
+  links:
+    - "db"
