@@ -8,12 +8,13 @@ from douban.items import Subject
 
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Request, Rule
-
+from douban import record
 
 class MovieSubjectSpider(CrawlSpider):
     name = 'movie_subject'
     allowed_domains = ['m.douban.com']
-    start_urls = ['https://m.douban.com/movie/subject/1292052/']
+    # start_urls = ['https://m.douban.com/movie/subject/1292052/']
+    start_urls = ['https://m.douban.com/movie/subject/%s/' % (str(record.get_movie_last_id()))]
     rules = (
         Rule(LinkExtractor(allow=('movie/subject/(\d).*rec$')),
              callback='parse_item', follow=True, process_request='cookie'),

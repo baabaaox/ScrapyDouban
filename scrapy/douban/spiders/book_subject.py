@@ -8,12 +8,13 @@ from douban.items import Subject
 
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Request, Rule
-
+from douban import record
 
 class BookSubjectSpider(CrawlSpider):
     name = 'book_subject'
     allowed_domains = ['m.douban.com']
-    start_urls = ['https://m.douban.com/book/subject/26628811/']
+    # start_urls = ['https://m.douban.com/book/subject/26628811/']
+    start_urls = ['https://m.douban.com/book/subject/%s/' % (str(record.get_book_last_id()))]
     rules = (
         Rule(LinkExtractor(allow=('book/subject/(\d).*rec$')),
              callback='parse_item', follow=True, process_request='cookie'),
