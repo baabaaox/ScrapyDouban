@@ -10,7 +10,8 @@ from douban.items import BookMeta
 import douban.util as util
 
 from scrapy import Request, Spider
-
+from scrapy.utils.project import get_project_settings
+settings = dict(get_project_settings().items())
 cursor = db.connection.cursor()
 
 
@@ -19,8 +20,8 @@ class BookMetaSpider(Spider):
     user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 \
                   (KHTML, like Gecko) Chrome/67.0.3396.62 Safari/537.36'
     allowed_domains = ["book.douban.com"]
-    sql = 'SELECT * FROM subjects WHERE type="book" AND douban_id NOT IN \
-           (SELECT douban_id FROM books) ORDER BY douban_id'
+    sql = 'SELECT * FROM '+settings['SUBJECTS_NAME']+' WHERE type="book" AND douban_id NOT IN \
+           (SELECT douban_id FROM '+settings['BOOKS_NAME']+') ORDER BY douban_id'
     cursor.execute(sql)
     books = cursor.fetchall()
     start_urls = (

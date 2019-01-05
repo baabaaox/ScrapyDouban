@@ -13,13 +13,14 @@ from scrapy.utils.misc import arg_to_iter
 from scrapy.utils.python import to_bytes
 
 from twisted.internet.defer import DeferredList
-
+from scrapy.utils.project import get_project_settings
+settings = dict(get_project_settings().items())
 cursor = db.connection.cursor()
 
 
 class DoubanPipeline(object):
     def get_subject(self, item):
-        sql = 'SELECT id FROM subjects WHERE douban_id=%s' % item['douban_id']
+        sql = 'SELECT id FROM ' + settings['SUBJECTS_NAME'] + ' WHERE douban_id=%s' % item['douban_id']
         cursor.execute(sql)
         return cursor.fetchone()
 
@@ -28,12 +29,12 @@ class DoubanPipeline(object):
         values = tuple(item.values())
         fields = ','.join(keys)
         temp = ','.join(['%s'] * len(keys))
-        sql = 'INSERT INTO subjects (%s) VALUES (%s)' % (fields, temp)
+        sql = 'INSERT INTO ' + settings['SUBJECTS_NAME'] + ' (%s) VALUES (%s)' % (fields, temp)
         cursor.execute(sql, values)
         return db.connection.commit()
 
     def get_movie_meta(self, item):
-        sql = 'SELECT id FROM movies WHERE douban_id=%s' % item['douban_id']
+        sql = 'SELECT id FROM ' + settings['MOVIES_NAME'] + ' WHERE douban_id=%s' % item['douban_id']
         cursor.execute(sql)
         return cursor.fetchone()
 
@@ -42,7 +43,7 @@ class DoubanPipeline(object):
         values = tuple(item.values())
         fields = ','.join(keys)
         temp = ','.join(['%s'] * len(keys))
-        sql = 'INSERT INTO movies (%s) VALUES (%s)' % (fields, temp)
+        sql = 'INSERT INTO ' + settings['MOVIES_NAME'] + ' (%s) VALUES (%s)' % (fields, temp)
         cursor.execute(sql, tuple(i.strip() for i in values))
         return db.connection.commit()
 
@@ -52,12 +53,12 @@ class DoubanPipeline(object):
         values = tuple(item.values())
         values.append(douban_id)
         fields = ['%s=' % i + '%s' for i in keys]
-        sql = 'UPDATE movies SET %s WHERE douban_id=%s' % (','.join(fields), '%s')
+        sql = 'UPDATE ' + settings['MOVIES_NAME'] + ' SET %s WHERE douban_id=%s' % (','.join(fields), '%s')
         cursor.execute(sql, tuple(i.strip() for i in values))
         return db.connection.commit()
 
     def get_book_meta(self, item):
-        sql = 'SELECT id FROM books WHERE douban_id=%s' % item['douban_id']
+        sql = 'SELECT id FROM ' + settings['BOOKS_NAME'] + ' WHERE douban_id=%s' % item['douban_id']
         cursor.execute(sql)
         return cursor.fetchone()
 
@@ -66,7 +67,7 @@ class DoubanPipeline(object):
         values = tuple(item.values())
         fields = ','.join(keys)
         temp = ','.join(['%s'] * len(keys))
-        sql = 'INSERT INTO books (%s) VALUES (%s)' % (fields, temp)
+        sql = 'INSERT INTO ' + settings['BOOKS_NAME'] + ' (%s) VALUES (%s)' % (fields, temp)
         cursor.execute(sql, tuple(i.strip() for i in values))
         return db.connection.commit()
 
@@ -76,12 +77,12 @@ class DoubanPipeline(object):
         values = tuple(item.values())
         values.append(douban_id)
         fields = ['%s=' % i + '%s' for i in keys]
-        sql = 'UPDATE books SET %s WHERE douban_id=%s' % (','.join(fields), '%s')
+        sql = 'UPDATE ' + settings['BOOKS_NAME'] + ' SET %s WHERE douban_id=%s' % (','.join(fields), '%s')
         cursor.execute(sql, values)
         return db.connection.commit()
 
     def get_comment(self, item):
-        sql = 'SELECT * FROM comments WHERE douban_comment_id=%s\
+        sql = 'SELECT * FROM ' + settings['COMMENTS_NAME'] + ' WHERE douban_comment_id=%s\
 ' % item['douban_comment_id']
         cursor.execute(sql)
         return cursor.fetchone()
@@ -91,7 +92,7 @@ class DoubanPipeline(object):
         values = tuple(item.values())
         fields = ','.join(keys)
         temp = ','.join(['%s'] * len(keys))
-        sql = 'INSERT INTO comments (%s) VALUES (%s)' % (fields, temp)
+        sql = 'INSERT INTO ' + settings['COMMENTS_NAME'] + ' (%s) VALUES (%s)' % (fields, temp)
         cursor.execute(sql, values)
         return db.connection.commit()
 

@@ -9,15 +9,16 @@ import douban.database as db
 from douban.items import Comment
 
 from scrapy import Request, Spider
-
+from scrapy.utils.project import get_project_settings
+settings = dict(get_project_settings().items())
 cursor = db.connection.cursor()
 
 
 class MovieCommentSpider(Spider):
     name = 'movie_comment'
     allowed_domains = ['movie.douban.com']
-    sql = 'SELECT douban_id FROM movies WHERE douban_id NOT IN \
-           (SELECT douban_id FROM comments GROUP BY douban_id) ORDER BY douban_id DESC'
+    sql = 'SELECT douban_id FROM ' + settings['MOVIES_NAME'] + ' WHERE douban_id NOT IN \
+           (SELECT douban_id FROM ' + settings['COMMENTS_NAME'] + ' GROUP BY douban_id) ORDER BY douban_id DESC'
     cursor.execute(sql)
     movies = cursor.fetchall()
     start_urls = {

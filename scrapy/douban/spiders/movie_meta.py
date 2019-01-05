@@ -10,7 +10,8 @@ import douban.validator as validator
 
 from scrapy import Request, Spider
 from douban.items import MovieMeta
-
+from scrapy.utils.project import get_project_settings
+settings = dict(get_project_settings().items())
 
 cursor = db.connection.cursor()
 
@@ -20,8 +21,8 @@ class MovieMetaSpider(Spider):
     user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 \
                   (KHTML, like Gecko) Chrome/67.0.3396.62 Safari/537.36'
     allowed_domains = ["movie.douban.com"]
-    sql = 'SELECT * FROM subjects WHERE type="movie" AND douban_id NOT IN \
-(SELECT douban_id FROM movies) ORDER BY douban_id DESC'
+    sql = 'SELECT * FROM '+ settings['SUBJECTS_NAME']+' WHERE type="movie" AND douban_id NOT IN \
+(SELECT douban_id FROM '+ settings['MOVIES_NAME']+') ORDER BY douban_id DESC'
     cursor.execute(sql)
     movies = cursor.fetchall()
     start_urls = (
