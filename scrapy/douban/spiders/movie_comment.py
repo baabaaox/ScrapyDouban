@@ -52,4 +52,4 @@ class MovieCommentSpider(Spider):
                 comment['douban_user_url'] = item['user']['url']
                 comment['content'] = item['comment']
                 comment['votes'] = item['vote_count']
-            yield comment
+                yield comment
