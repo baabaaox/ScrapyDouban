@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
 import string
 import random
 import douban.util as util
@@ -11,26 +10,26 @@ import douban.validator as validator
 from scrapy import Request, Spider
 from douban.items import MovieMeta
 
-
 cursor = db.connection.cursor()
 
 
 class MovieMetaSpider(Spider):
     name = 'movie_meta'
-    user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 \
-                  (KHTML, like Gecko) Chrome/67.0.3396.62 Safari/537.36'
+    user_agent = 'Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko'
     allowed_domains = ["movie.douban.com"]
     sql = 'SELECT * FROM subjects WHERE type="movie" AND douban_id NOT IN \
 (SELECT douban_id FROM movies) ORDER BY douban_id DESC'
+
     cursor.execute(sql)
     movies = cursor.fetchall()
-    start_urls = (
-        'https://movie.douban.com/subject/%s/' % i['douban_id'] for i in movies
-    )
+    start_urls = ('https://movie.douban.com/subject/%s/' % i['douban_id']
+                  for i in movies)
 
     def start_requests(self):
         for url in self.start_urls:
-            bid = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(11))
+            bid = ''.join(
+                random.choice(string.ascii_letters + string.digits)
+                for x in range(11))
             cookies = {
                 'bid': bid,
                 'dont_redirect': True,
@@ -45,6 +44,7 @@ class MovieMetaSpider(Spider):
     def get_type(self, meta, response):
         regx = '//text()[preceding-sibling::span[text()="集数:"]][fo\
 llowing-sibling::br]'
+
         data = response.xpath(regx).extract()
         if data:
             meta['type'] = 'tv'
@@ -56,11 +56,9 @@ llowing-sibling::br]'
         regx = '//img[@rel="v:image"]/@src'
         data = response.xpath(regx).extract()
         if data:
-            if (data[0].find('default') == -1):
-                meta['cover'] = data[0].replace('spst', '\
-lpst').replace('mpic', 'lpic')
-            else:
-                meta['cover'] = ''
+            meta['cover'] = data[0].replace('s_ratio_poster', 'l_ratio_poster')
+        else:
+            meta['cover'] = ''
         return meta
 
     def get_name(self, meta, response):
@@ -102,6 +100,7 @@ lpst').replace('mpic', 'lpic')
     def get_official_site(self, meta, response):
         regx = '//a[preceding-sibling::span[text()="官方网站:"]][following-si\
 bling::br]/@href'
+
         data = response.xpath(regx).extract()
         if data:
             meta['official_site'] = validator.process_url(data[0])
@@ -110,6 +109,7 @@ bling::br]/@href'
     def get_regions(self, meta, response):
         regx = '//text()[preceding-sibling::span[text()="制片国家/地区:"]][fo\
 llowing-sibling::br]'
+
         data = response.xpath(regx).extract()
         if data:
             meta['regions'] = data[0]
@@ -118,6 +118,7 @@ llowing-sibling::br]'
     def get_languages(self, meta, response):
         regx = '//text()[preceding-sibling::span[text()="语言:"]][following-s\
 ibling::br]'
+
         data = response.xpath(regx).extract()
         if data:
             meta['languages'] = data[0]
@@ -142,6 +143,7 @@ ibling::br]'
     def get_alias(self, meta, response):
         regx = '//text()[preceding-sibling::span[text()="又名:"]][following-s\
 ibling::br]'
+
         data = response.xpath(regx).extract()
         if data:
             meta['alias'] = validator.process_slash_str(data[0])
@@ -150,9 +152,10 @@ ibling::br]'
     def get_imdb_id(self, meta, response):
         regx = '//a[preceding-sibling::span[text()="IMDb链接:"]][following-si\
 bling::br]/@href'
+
         data = response.xpath(regx).extract()
         if data:
-            meta['imdb_id'] = data[0].strip().split('?')[0][26:]
+            meta['imdb_id'] = data[0].strip().split('?')[0][27:]
         return meta
 
     def get_score(self, meta, response):
@@ -185,12 +188,13 @@ bling::br]/@href'
         regx = '//span[@class="all hidden"]/text()'
         data = response.xpath(regx).extract()
         if data:
-            meta['storyline'] = data[0]
+            meta['storyline'] = '<br>'.join([item.strip() for item in data])
         else:
             regx = '//span[@property="v:summary"]/text()'
             data = response.xpath(regx).extract()
             if data:
-                meta['storyline'] = data[0]
+                meta['storyline'] = '<br>'.join(
+                    [item.strip() for item in data])
         return meta
 
     def parse(self, response):

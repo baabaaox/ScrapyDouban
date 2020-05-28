@@ -6,7 +6,7 @@ import arrow
 
 
 def match_year(s):
-    matches = re.findall('[\d]{4}', s)
+    matches = re.findall('[\\d]{4}', s)
     if matches:
         return matches[0]
     else:
@@ -14,7 +14,7 @@ def match_year(s):
 
 
 def match_date(s):
-    matches = re.findall('[\d-]{8,10}', s)
+    matches = re.findall('[\\d-]{8,10}', s)
     if matches:
         return matches[0]
     else:

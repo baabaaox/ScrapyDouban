@@ -3,3 +3,4 @@
 storage/
 __pycache__/
 .idea/
+.vscode/

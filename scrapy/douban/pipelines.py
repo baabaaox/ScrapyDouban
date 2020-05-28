@@ -52,7 +52,8 @@ class DoubanPipeline(object):
         values = tuple(item.values())
         values.append(douban_id)
         fields = ['%s=' % i + '%s' for i in keys]
-        sql = 'UPDATE movies SET %s WHERE douban_id=%s' % (','.join(fields), '%s')
+        sql = 'UPDATE movies SET %s WHERE douban_id=%s' % (','.join(fields),
+                                                           '%s')
         cursor.execute(sql, tuple(i.strip() for i in values))
         return db.connection.commit()
 
@@ -76,7 +77,8 @@ class DoubanPipeline(object):
         values = tuple(item.values())
         values.append(douban_id)
         fields = ['%s=' % i + '%s' for i in keys]
-        sql = 'UPDATE books SET %s WHERE douban_id=%s' % (','.join(fields), '%s')
+        sql = 'UPDATE books SET %s WHERE douban_id=%s' % (','.join(fields),
+                                                          '%s')
         cursor.execute(sql, values)
         return db.connection.commit()
 
@@ -154,32 +156,10 @@ class CoverPipeline(ImagesPipeline):
         return dfd.addCallback(self.item_completed, item, info)
 
     def file_path(self, request, response=None, info=None):
-        # start of deprecation warning block (can be removed in the future)
-        def _warn():
-            from scrapy.exceptions import ScrapyDeprecationWarning
-            import warnings
-            warnings.warn('ImagesPipeline.image_key(url) and file_key(url) methods are deprecated, '
-                          'please use file_path(request, response=None, info=None) instead',
-                          category=ScrapyDeprecationWarning, stacklevel=1)
-
-        # check if called from image_key or file_key with url as first argument
-        if not isinstance(request, Request):
-            _warn()
-            url = request
-        else:
-            url = request.url
-
-        # detect if file_key() or image_key() methods have been overridden
-        if not hasattr(self.file_key, '_base'):
-            _warn()
-            return self.file_key(url)
-        elif not hasattr(self.image_key, '_base'):
-            _warn()
-            return self.image_key(url)
-        # end of deprecation warning block
-
-        image_guid = hashlib.sha1(to_bytes(url)).hexdigest()
-        return '%s%s/%s%s/%s.jpg' % (image_guid[9], image_guid[19], image_guid[29], image_guid[39], image_guid)
+        image_guid = hashlib.sha1(to_bytes(request.url)).hexdigest()
+        return '%s%s/%s%s/%s.jpg' % (image_guid[9], image_guid[19],
+                                     image_guid[29], image_guid[39],
+                                     image_guid)
 
     def get_media_requests(self, item, info):
         if item['cover']:

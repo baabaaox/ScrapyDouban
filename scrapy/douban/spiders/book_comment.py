@@ -18,18 +18,25 @@ class BookCommentSpider(Spider):
     allowed_domains = ['book.douban.com']
     sql = 'SELECT douban_id FROM books WHERE douban_id NOT IN \
            (SELECT douban_id FROM comments GROUP BY douban_id) ORDER BY douban_id DESC'
+
     cursor.execute(sql)
     books = cursor.fetchall()
     start_urls = {
-        str(i['douban_id']): ('https://m.douban.com/rexxar/api/v2/book/%s/interests?count=5&order_by=hot' % i['douban_id']) for i in books
+        str(i['douban_id']):
+        ('https://m.douban.com/rexxar/api/v2/book/%s/interests?count=5&order_by=hot'
+         % i['douban_id'])
+        for i in books
     }
 
     def start_requests(self):
         for (key, url) in self.start_urls.items():
             headers = {
-                'Referer': 'https://m.douban.com/book/subject/%s/comments' % key
+                'Referer':
+                'https://m.douban.com/book/subject/%s/comments' % key
             }
-            bid = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(11))
+            bid = ''.join(
+                random.choice(string.ascii_letters + string.digits)
+                for x in range(11))
             cookies = {
                 'bid': bid,
                 'dont_redirect': True,

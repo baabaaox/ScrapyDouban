@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
 import random
 import string
 
@@ -18,18 +17,21 @@ class BookMetaSpider(Spider):
     name = 'book_meta'
     user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 \
                   (KHTML, like Gecko) Chrome/67.0.3396.62 Safari/537.36'
+
     allowed_domains = ["book.douban.com"]
     sql = 'SELECT * FROM subjects WHERE type="book" AND douban_id NOT IN \
            (SELECT douban_id FROM books) ORDER BY douban_id'
+
     cursor.execute(sql)
     books = cursor.fetchall()
-    start_urls = (
-        'https://book.douban.com/subject/%s/' % i['douban_id'] for i in books
-    )
+    start_urls = ('https://book.douban.com/subject/%s/' % i['douban_id']
+                  for i in books)
 
     def start_requests(self):
         for url in self.start_urls:
-            bid = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(11))
+            bid = ''.join(
+                random.choice(string.ascii_letters + string.digits)
+                for x in range(11))
             cookies = {
                 'bid': bid,
                 'dont_redirect': True,
@@ -46,7 +48,8 @@ class BookMetaSpider(Spider):
         data = response.xpath(regx).extract()
         if data:
             if (data[0].find('default') == -1):
-                meta['cover'] = data[0].replace('spst', 'lpst').replace('mpic', 'lpic')
+                meta['cover'] = data[0].replace('spst', 'lpst').replace(
+                    'mpic', 'lpic')
             else:
                 meta['cover'] = ''
         return meta
@@ -65,6 +68,7 @@ class BookMetaSpider(Spider):
     def get_alt_name(self, meta, response):
         regx = '//text()[preceding-sibling::span[text()="原作名:"]][following\
 -sibling::br]'
+
         data = response.xpath(regx).extract()
         if data:
             meta['alt_name'] = data[0]
@@ -73,6 +77,7 @@ class BookMetaSpider(Spider):
     def get_sub_name(self, meta, response):
         regx = '//text()[preceding-sibling::span[text()="副标题:"]][following\
 -sibling::br]'
+
         data = response.xpath(regx).extract()
         if data:
             meta['sub_name'] = data[0]
@@ -113,6 +118,7 @@ class BookMetaSpider(Spider):
     def get_series(self, meta, response):
         regx = '//a[preceding-sibling::span[text()="丛书:"]][following\
 -sibling::br]/text()'
+
         series = response.xpath(regx).extract()
         if series:
             meta['series'] = '/'.join((i.strip() for i in series))
@@ -121,6 +127,7 @@ class BookMetaSpider(Spider):
     def get_publisher(self, meta, response):
         regx = '//text()[preceding-sibling::span[text()="出版社:"]][following\
 -sibling::br]'
+
         data = response.xpath(regx).extract()
         if data:
             meta['publisher'] = data[0]
@@ -129,6 +136,7 @@ class BookMetaSpider(Spider):
     def get_publish_date(self, meta, response):
         regx = '//text()[preceding-sibling::span[text()="出版年:"]][following\
 -sibling::br]'
+
         data = response.xpath(regx).extract()
         if data:
             meta['publish_date'] = data[0]
@@ -137,6 +145,7 @@ class BookMetaSpider(Spider):
     def get_pages(self, meta, response):
         regx = '//text()[preceding-sibling::span[text()="页数:"]][following\
 -sibling::br]'
+
         data = response.xpath(regx).extract()
         if data:
             meta['pages'] = data[0]
@@ -145,6 +154,7 @@ class BookMetaSpider(Spider):
     def get_price(self, meta, response):
         regx = '//text()[preceding-sibling::span[text()="定价:"]][following\
 -sibling::br]'
+
         data = response.xpath(regx).extract()
         if data:
             meta['price'] = data[0][:-1]
@@ -153,6 +163,7 @@ class BookMetaSpider(Spider):
     def get_binding(self, meta, response):
         regx = '//text()[preceding-sibling::span[text()="装帧:"]][following\
 -sibling::br]'
+
         data = response.xpath(regx).extract()
         if data:
             meta['binding'] = data[0]
@@ -161,6 +172,7 @@ class BookMetaSpider(Spider):
     def get_isbn(self, meta, response):
         regx = '//text()[preceding-sibling::span[text()="ISBN:"]][following\
 -sibling::br]'
+
         data = response.xpath(regx).extract()
         if data:
             meta['isbn'] = data[0]
