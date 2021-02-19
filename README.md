@@ -1,6 +1,6 @@
 ## ScrapyDouban
 
-[![ScrapyDouban Demo](https://img.youtube.com/vi/Yt8_j0TEvh0/0.jpg)](https://www.youtube.com/watch?v=Yt8_j0TEvh0) [演示视频](https://www.youtube.com/watch?v=Yt8_j0TEvh0)
+[![ScrapyDouban Demo](https://img.youtube.com/vi/Fyrvrb0rqvE/0.jpg)](https://www.youtube.com/watch?v=Fyrvrb0rqvE) [演示视频](https://www.youtube.com/watch?v=Fyrvrb0rqvE)
 
 基于 Python3 的豆瓣电影/豆瓣读书 Scarpy 爬虫，实现封面下载+元数据抓取+评论入库。
 
