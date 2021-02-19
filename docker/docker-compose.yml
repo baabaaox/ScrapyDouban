@@ -23,7 +23,5 @@ services:
       - MYSQL_USER=root
       - MYSQL_PASS=public
       - MYSQL_DB=douban
-    volumes:
-      - /srv/scrapy/douban:/srv/douban
     links:
       - mysql
