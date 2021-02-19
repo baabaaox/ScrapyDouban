@@ -1,228 +1,195 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-import string
-import random
-import douban.util as util
 import douban.database as db
+import douban.util as util
 import douban.validator as validator
-
-from scrapy import Request, Spider
 from douban.items import MovieMeta
+from scrapy import Spider
 
 cursor = db.connection.cursor()
 
 
 class MovieMetaSpider(Spider):
-    name = 'movie_meta'
-    user_agent = 'Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko'
+    name = "movie_meta"
     allowed_domains = ["movie.douban.com"]
+    user_agent = "Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko"
     sql = 'SELECT * FROM subjects WHERE type="movie" AND douban_id NOT IN \
 (SELECT douban_id FROM movies) ORDER BY douban_id DESC'
-
     cursor.execute(sql)
     movies = cursor.fetchall()
-    start_urls = ('https://movie.douban.com/subject/%s/' % i['douban_id']
-                  for i in movies)
+    start_urls = ("https://movie.douban.com/subject/%s/" % i["douban_id"] for i in movies)
 
-    def start_requests(self):
-        for url in self.start_urls:
-            bid = ''.join(
-                random.choice(string.ascii_letters + string.digits)
-                for x in range(11))
-            cookies = {
-                'bid': bid,
-                'dont_redirect': True,
-                'handle_httpstatus_list': [302],
-            }
-            yield Request(url, cookies=cookies)
-
-    def get_douban_id(self, meta, response):
-        meta['douban_id'] = response.url[33:-1]
+    def set_douban_id(self, meta, response):
+        meta["douban_id"] = response.url[33:-1]
         return meta
 
-    def get_type(self, meta, response):
-        regx = '//text()[preceding-sibling::span[text()="集数:"]][fo\
+    def set_type(self, meta, response):
+        regex = '//text()[preceding-sibling::span[text()="集数:"]][fo\
 llowing-sibling::br]'
-
-        data = response.xpath(regx).extract()
-        if data:
-            meta['type'] = 'tv'
+        match = response.xpath(regex).get()
+        if match:
+            meta["type"] = "tv"
         else:
-            meta['type'] = 'movie'
+            meta["type"] = "movie"
         return meta
 
-    def get_cover(self, meta, response):
-        regx = '//img[@rel="v:image"]/@src'
-        data = response.xpath(regx).extract()
-        if data:
-            meta['cover'] = data[0].replace('s_ratio_poster', 'l_ratio_poster')
+    def set_cover(self, meta, response):
+        regex = '//img[@rel="v:image"]/@src'
+        match = response.xpath(regex).get()
+        if match:
+            meta["cover"] = match.replace("s_ratio_poster", "l_ratio_poster")
         else:
-            meta['cover'] = ''
+            meta["cover"] = ""
         return meta
 
-    def get_name(self, meta, response):
-        regx = '//title/text()'
-        data = response.xpath(regx).extract()
-        if data:
-            meta['name'] = data[0][:-5].strip()
+    def set_name(self, meta, response):
+        regex = "//title/text()"
+        match = response.xpath(regex).get()
+        if match:
+            meta["name"] = match[:-5].strip()
         return meta
 
-    def get_slug(self, meta, response):
-        meta['slug'] = util.shorturl(meta['douban_id'])
+    def set_slug(self, meta, response):
+        meta["slug"] = util.shorturl(meta["douban_id"])
         return meta
 
-    def get_year(self, meta, response):
-        regx = '//span[@class="year"]/text()'
-        data = response.xpath(regx).extract()
-        if data:
-            meta['year'] = validator.match_year(data[0])
+    def set_year(self, meta, response):
+        regex = '//span[@class="year"]/text()'
+        match = response.xpath(regex).get()
+        if match:
+            meta["year"] = validator.match_year(match)
         return meta
 
-    def get_directors(self, meta, response):
-        regx = '//a[@rel="v:directedBy"]/text()'
-        directors = response.xpath(regx).extract()
-        meta['directors'] = validator.process_slash_str('/'.join(directors))
+    def set_directors(self, meta, response):
+        regex = '//a[@rel="v:directedBy"]/text()'
+        matches = response.xpath(regex).getall()
+        meta["directors"] = validator.process_slash_str("/".join(matches))
         return meta
 
-    def get_actors(self, meta, response):
-        regx = '//a[@rel="v:starring"]/text()'
-        actors = response.xpath(regx).extract()
-        meta['actors'] = validator.process_slash_str('/'.join(actors))
+    def set_actors(self, meta, response):
+        regex = '//a[@rel="v:starring"]/text()'
+        matches = response.xpath(regex).getall()
+        meta["actors"] = validator.process_slash_str("/".join(matches))
         return meta
 
-    def get_genres(self, meta, response):
-        regx = '//span[@property="v:genre"]/text()'
-        genres = response.xpath(regx).extract()
-        meta['genres'] = '/'.join(genres)
+    def set_genres(self, meta, response):
+        regex = '//span[@property="v:genre"]/text()'
+        matches = response.xpath(regex).getall()
+        meta["genres"] = "/".join(matches)
         return meta
 
-    def get_official_site(self, meta, response):
-        regx = '//a[preceding-sibling::span[text()="官方网站:"]][following-si\
+    def set_official_site(self, meta, response):
+        regex = '//a[preceding-sibling::span[text()="官方网站:"]][following-si\
 bling::br]/@href'
-
-        data = response.xpath(regx).extract()
-        if data:
-            meta['official_site'] = validator.process_url(data[0])
+        match = response.xpath(regex).get()
+        if match:
+            meta["official_site"] = validator.process_url(match)
         return meta
 
-    def get_regions(self, meta, response):
-        regx = '//text()[preceding-sibling::span[text()="制片国家/地区:"]][fo\
+    def set_regions(self, meta, response):
+        regex = '//text()[preceding-sibling::span[text()="制片国家/地区:"]][fo\
 llowing-sibling::br]'
-
-        data = response.xpath(regx).extract()
-        if data:
-            meta['regions'] = data[0]
+        match = response.xpath(regex).get()
+        if match:
+            meta["regions"] = match
         return meta
 
-    def get_languages(self, meta, response):
-        regx = '//text()[preceding-sibling::span[text()="语言:"]][following-s\
+    def set_languages(self, meta, response):
+        regex = '//text()[preceding-sibling::span[text()="语言:"]][following-s\
 ibling::br]'
-
-        data = response.xpath(regx).extract()
-        if data:
-            meta['languages'] = data[0]
+        match = response.xpath(regex).get()
+        if match:
+            meta["languages"] = match
         return meta
 
-    def get_release_date(self, meta, response):
-        regx = '//span[@property="v:initialReleaseDate"]/@content'
-        data = response.xpath(regx).extract()
-        if data:
-            release_date = validator.str_to_date(validator.match_date(data[0]))
+    def set_release_date(self, meta, response):
+        regex = '//span[@property="v:initialReleaseDate"]/@content'
+        match = response.xpath(regex).get()
+        if match:
+            release_date = validator.str_to_date(validator.match_date(match))
             if release_date:
-                meta['release_date'] = release_date
+                meta["release_date"] = release_date
         return meta
 
-    def get_runtime(self, meta, response):
-        regx = '//span[@property="v:runtime"]/@content'
-        data = response.xpath(regx).extract()
-        if data:
-            meta['mins'] = data[0]
+    def set_runtime(self, meta, response):
+        regex = '//span[@property="v:runtime"]/@content'
+        match = response.xpath(regex).get()
+        if match:
+            meta["mins"] = match
         return meta
 
-    def get_alias(self, meta, response):
-        regx = '//text()[preceding-sibling::span[text()="又名:"]][following-s\
+    def set_alias(self, meta, response):
+        regex = '//text()[preceding-sibling::span[text()="又名:"]][following-s\
 ibling::br]'
-
-        data = response.xpath(regx).extract()
-        if data:
-            meta['alias'] = validator.process_slash_str(data[0])
+        match = response.xpath(regex).get()
+        if match:
+            meta["alias"] = validator.process_slash_str(match)
         return meta
 
-    def get_imdb_id(self, meta, response):
-        regx = '//a[preceding-sibling::span[text()="IMDb链接:"]][following-si\
+    def set_imdb_id(self, meta, response):
+        regex = '//a[preceding-sibling::span[text()="IMDb链接:"]][following-si\
 bling::br]/@href'
-
-        data = response.xpath(regx).extract()
-        if data:
-            meta['imdb_id'] = data[0].strip().split('?')[0][27:]
+        match = response.xpath(regex).get()
+        if match:
+            meta["imdb_id"] = match.strip().split("?")[0][27:]
         return meta
 
-    def get_score(self, meta, response):
-        regx = '//strong[@property="v:average"]/text()'
-        data = response.xpath(regx).extract()
-        if data:
-            meta['douban_score'] = data[0]
+    def set_score(self, meta, response):
+        regex = '//strong[@property="v:average"]/text()'
+        match = response.xpath(regex).get()
+        if match:
+            meta["douban_score"] = match
         return meta
 
-    def get_votes(self, meta, response):
-        regx = '//span[@property="v:votes"]/text()'
-        data = response.xpath(regx).extract()
-        if data:
-            meta['douban_votes'] = data[0]
+    def set_votes(self, meta, response):
+        regex = '//span[@property="v:votes"]/text()'
+        match = response.xpath(regex).get()
+        if match:
+            meta["douban_votes"] = match
         return meta
 
-    def get_tags(self, meta, response):
-        regx = '//div[@class="tags-body"]/a/text()'
-        tags = response.xpath(regx).extract()
-        meta['tags'] = '/'.join(tags)
+    def set_tags(self, meta, response):
+        regex = '//div[@class="tags-body"]/a/text()'
+        matches = response.xpath(regex).getall()
+        meta["tags"] = "/".join(matches)
         return meta
 
-    def get_comments(self, meta, response):
-        regx = '//div[@class="comment"]/p/text()'
-        comments = response.xpath(regx).extract()
-        meta['comments'] = '/'.join((i.strip() for i in comments))
-        return meta
-
-    def get_storyline(self, meta, response):
-        regx = '//span[@class="all hidden"]/text()'
-        data = response.xpath(regx).extract()
-        if data:
-            meta['storyline'] = '<br>'.join([item.strip() for item in data])
+    def set_storyline(self, meta, response):
+        regex = '//span[@class="all hidden"]/text()'
+        matches = response.xpath(regex).getall()
+        if matches:
+            meta["storyline"] = "<br>".join([item.strip() for item in matches])
         else:
-            regx = '//span[@property="v:summary"]/text()'
-            data = response.xpath(regx).extract()
-            if data:
-                meta['storyline'] = '<br>'.join(
-                    [item.strip() for item in data])
+            regex = '//span[@property="v:summary"]/text()'
+            matches = response.xpath(regex).getall()
+            if matches:
+                meta["storyline"] = "<br>".join([item.strip() for item in matches])
+        return meta
+
+    def set_comments(self, meta, response):
+        regex = '//div[@class="comment"]/p/text()'
+        matches = response.xpath(regex).getall()
+        meta["comments"] = "/".join((i.strip() for i in matches))
         return meta
 
     def parse(self, response):
-        if 35000 > len(response.body):
-            print(response.body)
-            print(response.url)
-        elif 404 == response.status:
-            print(response.url)
-        else:
-            meta = MovieMeta()
-            self.get_douban_id(meta, response)
-            self.get_type(meta, response)
-            self.get_cover(meta, response)
-            self.get_name(meta, response)
-            self.get_year(meta, response)
-            self.get_directors(meta, response)
-            self.get_actors(meta, response)
-            self.get_genres(meta, response)
-            self.get_official_site(meta, response)
-            self.get_regions(meta, response)
-            self.get_languages(meta, response)
-            self.get_release_date(meta, response)
-            self.get_runtime(meta, response)
-            self.get_alias(meta, response)
-            self.get_imdb_id(meta, response)
-            self.get_score(meta, response)
-            self.get_votes(meta, response)
-            self.get_tags(meta, response)
-            self.get_storyline(meta, response)
-            self.get_slug(meta, response)
-            return meta
+        meta = MovieMeta()
+        self.set_douban_id(meta, response)
+        self.set_type(meta, response)
+        self.set_cover(meta, response)
+        self.set_name(meta, response)
+        self.set_year(meta, response)
+        self.set_directors(meta, response)
+        self.set_actors(meta, response)
+        self.set_genres(meta, response)
+        self.set_official_site(meta, response)
+        self.set_regions(meta, response)
+        self.set_languages(meta, response)
+        self.set_release_date(meta, response)
+        self.set_runtime(meta, response)
+        self.set_alias(meta, response)
+        self.set_imdb_id(meta, response)
+        self.set_score(meta, response)
+        self.set_votes(meta, response)
+        self.set_tags(meta, response)
+        self.set_storyline(meta, response)
+        self.set_slug(meta, response)
+        return meta

@@ -1,14 +1,20 @@
-# -*- coding: utf-8 -*-
-
 # Define here the models for your spider middleware
 #
 # See documentation in:
-# https://doc.scrapy.org/en/latest/topics/spider-middleware.html
+# https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
+# useful for handling different item types with a single interface
+from itemadapter import ItemAdapter, is_item
 from scrapy import signals
 
 
-class DoubanSpiderMiddleware(object):
+class ProxyMiddleware(object):
+    def process_request(self, request, spider):
+        # curl https://m.douban.com/book/subject/26628811/ -x http://127.0.0.1:8081
+        request.meta["proxy"] = "http://127.0.0.1:8081"
+
+
+class DoubanSpiderMiddleware:
     # Not all methods need to be defined. If a method is not defined,
     # scrapy acts as if the spider middleware does not modify the
     # passed objects.
@@ -31,7 +37,7 @@ class DoubanSpiderMiddleware(object):
         # Called with the results returned from the Spider, after
         # it has processed the response.
 
-        # Must return an iterable of Request, dict or Item objects.
+        # Must return an iterable of Request, or item objects.
         for i in result:
             yield i
 
@@ -39,8 +45,7 @@ class DoubanSpiderMiddleware(object):
         # Called when a spider or process_spider_input() method
         # (from other spider middleware) raises an exception.
 
-        # Should return either None or an iterable of Response, dict
-        # or Item objects.
+        # Should return either None or an iterable of Request or item objects.
         pass
 
     def process_start_requests(self, start_requests, spider):
@@ -53,10 +58,10 @@ class DoubanSpiderMiddleware(object):
             yield r
 
     def spider_opened(self, spider):
-        spider.logger.info('Spider opened: %s' % spider.name)
+        spider.logger.info("Spider opened: %s" % spider.name)
 
 
-class DoubanDownloaderMiddleware(object):
+class DoubanDownloaderMiddleware:
     # Not all methods need to be defined. If a method is not defined,
     # scrapy acts as if the downloader middleware does not modify the
     # passed objects.
@@ -100,11 +105,4 @@ class DoubanDownloaderMiddleware(object):
         pass
 
     def spider_opened(self, spider):
-        spider.logger.info('Spider opened: %s' % spider.name)
-
-
-class ProxyMiddleware(object):
-    def process_request(self, request, spider):
-        # curl https://m.douban.com/book/subject/26628811/ -x http://127.0.0.1:8081
-        request.meta['proxy'] = 'http://127.0.0.1:8081'
-        # request.meta['proxy'] = 'http://10.0.0.164:1080'
+        spider.logger.info("Spider opened: %s" % spider.name)

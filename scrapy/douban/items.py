@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-from scrapy import Item, Field
+from scrapy import Field, Item
 
 
 class Subject(Item):
