@@ -1,11 +1,13 @@
-FROM baabaaox/scrapy:2.4.1-alpine
+FROM python:3.9-slim-buster
 
-RUN apk add --update --no-cache jpeg-dev tzdata git \
-&& cp /usr/share/zoneinfo/Asia/Chongqing /etc/localtime && echo 'Asia/Chongqing' > /etc/timezone && apk del tzdata \
-&& pip install -i https://mirrors.aliyun.com/pypi/simple/ --upgrade pip \
-&& pip install -i https://mirrors.aliyun.com/pypi/simple/ pymysql==1.0.2 pillow==8.1.0 arrow==0.17.0 \
-&& pip install -U git+https://github.com/scrapy/scrapyd.git \
-&& git clone https://github.com/baabaaox/ScrapyDouban.git /srv/ScrapyDouban
+ARG SCRAPY_VERSION=2.5.0
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends git \
+    && pip install -i https://mirrors.aliyun.com/pypi/simple/ --upgrade pip \
+    && pip install -i https://mirrors.aliyun.com/pypi/simple/ scrapy==$SCRAPY_VERSION pymysql==1.0.2 pillow==8.2.0 arrow==1.0.3 \
+    && pip install -U git+https://github.com/scrapy/scrapyd.git \
+    && git clone https://github.com/baabaaox/ScrapyDouban.git /srv/ScrapyDouban
 
 COPY scrapyd.conf /etc/scrapyd/
 

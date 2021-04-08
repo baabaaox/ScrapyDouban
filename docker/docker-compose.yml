@@ -19,6 +19,7 @@ services:
     ports:
       - 6800:6800
     environment:
+      - TZ=Asia/Chongqing
       - MYSQL_HOST=mysql
       - MYSQL_USER=root
       - MYSQL_PASS=public

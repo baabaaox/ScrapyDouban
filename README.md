@@ -9,13 +9,12 @@
 ![Python3](https://www.python.org/static/community_logos/python-powered-w-200x80.png)
 ![MySQL](https://www.mysql.com/common/logos/powered-by-mysql-167x86.png)
 ![Docker](https://www.docker.com/sites/default/files/horizontal.png)
-![Alpine Linux](https://alpinelinux.org/alpinelinux-logo.svg)
 
 ### Docker
 -------
 项目包含了 douban_scrapyd douban_db douban_adminer 三个容器。
 
-douban_scrapyd 容器基于 alpine:3.12，默认安装的 Python3 库有 scrapy scrapyd pymysql pillow arrow，默认映射端口 6800:6800 以方便用户通过宿主机 IP:6800 访问 scrapyd 管理界面，登陆所需参数，用户名:scrapyd 密码:public。
+douban_scrapyd 容器基于 [python:3.9-slim-buster](https://pythonspeed.com/articles/base-image-python-docker-images/)，默认安装的 Python3 库有 scrapy scrapyd pymysql pillow arrow，默认映射端口 6800:6800 以方便用户通过宿主机 IP:6800 访问 scrapyd 管理界面，登陆所需参数，用户名:scrapyd 密码:public。
 
 douban_db 容器基于 mysql:8，root 密码为 public，默认初始化时导入 docker/mysql/douban.sql 文件到 douban 数据库。
 
@@ -39,7 +38,7 @@ douban_adminer 容器基于 adminer:4，默认映射端口 8080:8080 以方便�
     $ cd ./ScrapyDouban/docker
     $ sudo docker-compose up --build -d
     # 进入 douban_scrapyd 容器
-    $ sudo docker exec -it douban_scrapyd ash
+    $ sudo docker exec -it douban_scrapyd bash
     # 进入 scrapy 目录
     $ cd /srv/ScrapyDouban/scrapy
     $ scrapy list
