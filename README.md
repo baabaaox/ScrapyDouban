@@ -4,7 +4,7 @@
 
 基于 Python3 的豆瓣电影/豆瓣读书 Scarpy 爬虫，实现封面下载+元数据抓取+评论入库。
 
-维护这个项目的目的是分享一些我在使用 Scrapy 过程中的实践，该项目大概涵盖了 80% 我所使用到的 Scrapy 知识，希望能帮助到正在学习 Scrapy 的朋友，也希望大家在阅读[ Scrapy 官方文档](https://scrapy.readthedocs.io/en/stable/index.html)后食用，但是请注意目前项目所使用版本为 Scrapy 2.4.1。
+维护这个项目的目的是分享一些我在使用 Scrapy 过程中的实践，该项目大概涵盖了 80% 我所使用到的 Scrapy 知识，希望能帮助到正在学习 Scrapy 的朋友，也希望大家在阅读[ Scrapy 官方文档](https://scrapy.readthedocs.io/en/stable/index.html)后食用，但是请注意目前项目所使用版本为 Scrapy 2.5.0。
 
 ![Python3](https://www.python.org/static/community_logos/python-powered-w-200x80.png)
 ![MySQL](https://www.mysql.com/common/logos/powered-by-mysql-167x86.png)
