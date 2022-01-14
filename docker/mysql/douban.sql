@@ -75,6 +75,7 @@ CREATE TABLE `movies` (
   `release_date` date DEFAULT NULL,
   `official_site` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
   `directors` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `writers` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
   `actors` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `storyline` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `mins` smallint(5) unsigned NOT NULL DEFAULT '0',

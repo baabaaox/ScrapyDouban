@@ -14,6 +14,7 @@ class MovieMeta(Item):
     slug = Field()
     year = Field()
     directors = Field()
+    writers = Field()
     actors = Field()
     genres = Field()
     official_site = Field()

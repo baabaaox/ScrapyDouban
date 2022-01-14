@@ -64,6 +64,12 @@ llowing-sibling::br]'
         meta["directors"] = validator.process_slash_str("/".join(matches))
         return meta
 
+    def set_writers(self, meta, response):
+        regex = '//span[preceding-sibling::span[text()="编剧"]]/a/text()'
+        matches = response.xpath(regex).getall()
+        meta["writers"] = validator.process_slash_str("/".join(matches))
+        return meta
+
     def set_actors(self, meta, response):
         regex = '//a[@rel="v:starring"]/text()'
         matches = response.xpath(regex).getall()
@@ -178,6 +184,7 @@ bling::br]/@href'
         self.set_name(meta, response)
         self.set_year(meta, response)
         self.set_directors(meta, response)
+        self.set_writers(meta, response)
         self.set_actors(meta, response)
         self.set_genres(meta, response)
         self.set_official_site(meta, response)
